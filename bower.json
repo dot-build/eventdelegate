@@ -1,0 +1,10 @@
+{
+  "name": "eventdelegate",
+  "version": "0.1.0",
+  "description": "EventDelegate class to delegate DOM events",
+  "main": "./index.js",
+  "ignore": [
+    "**/.*",
+    "node_modules"
+  ]
+}
