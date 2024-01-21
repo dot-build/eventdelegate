@@ -1,98 +1,60 @@
-if (!window.EventDelegate) {
-    /**
-     * Global constructor for event delegation
-     *
-     * @class EventDelegate
-     *
-     * @example
-     *      // attach event handler
-     *      var useCapture = true;
-     *      var delegate = EventDelegate.addEventListener(document.body, 'click', '.delegate-selector', eventHandler, useCapture);
-     *
-     *      // detach event handler
-     *      delegate.removeEventListener();
-     *
-     *      // add multitple
-     *      var config = {
-     *          target: document.body,
-     *          event: 'focus',
-     *          useCapture: true,
-     *          delegate: {
-     *              '.delegate-selector', eventHandler,
-     *              '.another-selector', eventHandler,
-     *          }
-     *      };
-     *
-     *      EventDelegate.addEventListener(config);
-     */
-    window.EventDelegate = (function () {
-        function EventDelegate(root, eventName, selector, callback, useCapture) {
-            this.eventName = eventName;
-            this.root = root;
-            this.selector = selector;
-            this.callback = callback;
-            this.handler = handleEvent.bind(this);
-            this.useCapture = !!useCapture;
+export class EventDelegate {
+  constructor(root) {
+    this.root = root;
+    this.handlers = [];
+  }
 
-            root.addEventListener(eventName, this.handler, this.useCapture);
-        }
+  detach() {
+    this.handlers.forEach((h) => h.detach());
+  }
 
-        EventDelegate.addEventListener = addEventListener;
-        EventDelegate.prototype.removeEventListener = removeEventListener;
+  add(eventName, selector, callback, useCapture) {
+    const found = this.handlers.find(
+      (h) => h.selector === selector && h.eventName === eventName
+    );
 
-        function addEventListener(root, eventName, selector, callback, useCapture) {
-            if (typeof root === 'object' && arguments.length === 1) {
-                return addMultipleEventListeners(root);
-            }
+    if (found) {
+      return found.detach;
+    }
 
-            return new EventDelegate(root, eventName, selector, callback, useCapture);
-        }
+    const detach = this.root.addEventListener(
+      eventName,
+      (e) => this.handler(e, this.root, selector, callback, useCapture),
+      this.useCapture
+    );
 
-        function addMultipleEventListeners(events) {
-            var handlers = events.delegate;
-            var selectors = Object.keys(handlers);
-            var useCapture = !!events.useCapture;
+    this.handlers.push({
+      eventnName,
+      selector,
+      detach,
+    });
+  }
 
-            var delegateList = selectors.map(function (selector) {
-                return EventDelegate.addEventListener(events.target, events.event, selector, handlers[selector], useCapture);
-            });
+  remove(eventName, selector) {
+    const found = this.handlers.find(
+      (h) => h.eventName === eventName && h.selector === selector
+    );
 
-            return {
-                removeEventListener: removeAllListeners.bind(null, delegateList)
-            };
-        }
+    if (found) {
+      found.detach();
+    }
+  }
 
-        function removeAllListeners(delegateList) {
-            delegateList.forEach(function (delegate) {
-                delegate.removeEventListener();
-            });
-        }
+  handleEvent(event, root, selector, callback) {
+    const elements = [];
+    let target = event.target;
 
-        function handleEvent(event) {
-            var target = event.target;
-            var root = this.root;
-            var selector = this.selector;
-            var elements = [];
-            var match;
+    while (target && target !== root) {
+      elements.push(target);
+      target = target.parentNode;
+    }
 
-            while (target && target !== root) {
-                elements.push(target);
-                target = target.parentNode;
-            }
+    const match = elements.find((element) => element.matches(selector));
 
-            match = elements.find(function (element) {
-                return element.matches(selector);
-            });
+    if (!match) {
+      return;
+    }
 
-            if (!match) { return; }
-
-            this.callback.call(match, event);
-        }
-
-        function removeEventListener() {
-            this.root.removeEventListener(this.eventName, this.handler, this.useCapture);
-        }
-
-        return EventDelegate;
-    })();
+    callback.call(match, event);
+  }
 }
