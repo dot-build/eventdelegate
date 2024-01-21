@@ -1,6 +1,8 @@
 # es-eventdelegate
 
-EventDelegate class to delegate DOM events (with no external dependencies)
+EventDelegate class to delegate DOM events.
+
+This is the same as the old school `jQuery.delegate` function, if you are _that_ old, but in a modern ES class way.
 
 ## Usage
 
@@ -11,12 +13,12 @@ import { EventDelegate } from 'es-eventdelegate';
 const useCapture = true;
 const delegate = new EventDelegate(document.body);
 
-// when any anchor is clicked
+// when any link is clicked
 delegate.add('click', 'a', eventHandler, useCapture);
 
-// detach handler
+// detach a single handler
 delegate.remove('click', 'a');
 
-// detach all
+// detach all events
 delegate.detach();
 ```
