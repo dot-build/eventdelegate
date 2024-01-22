@@ -24,7 +24,7 @@ export class EventDelegate {
     );
 
     this.handlers.push({
-      eventnName,
+      eventName,
       selector,
       detach,
     });
