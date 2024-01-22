@@ -17,11 +17,10 @@ export class EventDelegate {
       return found.detach;
     }
 
-    const detach = this.root.addEventListener(
-      eventName,
-      (e) => this.handler(e, this.root, selector, callback, useCapture),
-      this.useCapture
-    );
+    const handler = (e) => this.handleEvent(e, this.root, selector, callback);
+    this.root.addEventListener(eventName, handler, useCapture);
+    const detach = () =>
+      this.root.removeEventListener(eventName, handler, useCapture);
 
     this.handlers.push({
       eventName,
